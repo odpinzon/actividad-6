@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rappy Moji — Prototipo de gestión de domicilios</title>
+<style>
+:root{
+  --yellow:#f5c400; --yellow-soft:#fff7cc; --dark:#1f2937; --muted:#6b7280;
+  --bg:#f5f6f8; --white:#fff; --line:#e5e7eb; --green:#16803c;
+  --red:#c62828; --blue:#2563eb; --orange:#c56a00;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--dark)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:flex}
+.sidebar{width:240px;background:#20252b;color:white;padding:24px 16px;position:fixed;inset:0 auto 0 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;padding:4px 10px 28px}
+.brand-mark{width:38px;height:38px;border-radius:10px;background:var(--yellow);color:#222;display:grid;place-items:center;font-weight:900}
+.nav button{width:100%;background:transparent;border:0;color:#d9dde2;text-align:left;padding:13px 12px;border-radius:8px;margin:3px 0}
+.nav button.active,.nav button:hover{background:#343a40;color:white}
+.main{margin-left:240px;width:calc(100% - 240px)}
+.topbar{height:70px;background:white;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 30px;position:sticky;top:0;z-index:5}
+.operator{display:flex;align-items:center;gap:10px;font-size:14px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--yellow-soft);display:grid;place-items:center;font-weight:bold}
+.content{padding:30px;max-width:1280px;margin:auto}
+.page{display:none}.page.active{display:block}
+h1{margin:0 0 8px;font-size:28px} h2{font-size:20px;margin:0 0 14px} h3{font-size:16px}
+.subtitle{color:var(--muted);margin-bottom:24px}
+.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.metric{background:white;border:1px solid var(--line);border-radius:12px;padding:17px}
+.metric strong{font-size:27px;display:block;margin-bottom:5px}.metric span{color:var(--muted);font-size:13px}
+.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.primary{background:#20252b;color:white;border:0;border-radius:8px;padding:11px 16px;font-weight:700}
+.secondary{background:white;color:#20252b;border:1px solid #cfd3d8;border-radius:8px;padding:10px 15px}
+.yellow{background:var(--yellow);border:0;color:#222}
+.danger{background:#fff0f0;color:var(--red);border:1px solid #f0b4b4}
+.success{background:#edf9f1;color:var(--green);border:1px solid #b9e2c5}
+.filters{display:flex;gap:10px;flex-wrap:wrap}.filters input,.filters select{border:1px solid var(--line);padding:10px;border-radius:8px;background:white}
+.table{width:100%;border-collapse:collapse}.table th,.table td{padding:13px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}.table th{font-size:12px;color:var(--muted);text-transform:uppercase}
+.status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.s-nuevo{background:#eef2ff;color:#4338ca}.s-confirmado{background:#fff7cc;color:#8a6400}.s-proceso{background:#e8f1ff;color:#1758b5}.s-entregado{background:#eaf8ef;color:#16713a}.s-abandonado{background:#fff1df;color:#a45a00}.s-cancelado{background:#fdecec;color:#b42318}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.small{padding:7px 10px;font-size:12px}
+.detail-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:20px}.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.info{background:#fafafa;border:1px solid var(--line);border-radius:9px;padding:12px}.info label{display:block;color:var(--muted);font-size:11px;margin-bottom:5px;text-transform:uppercase}.info b{font-size:14px}
+.timeline{display:flex;align-items:flex-start;gap:0;margin:20px 0 10px}.step{flex:1;text-align:center;position:relative}.step:not(:last-child):after{content:"";height:3px;background:#d8dce1;position:absolute;top:13px;left:50%;width:100%;z-index:0}.dot{width:28px;height:28px;border-radius:50%;background:#d8dce1;color:white;margin:auto;display:grid;place-items:center;position:relative;z-index:1;font-size:12px;font-weight:bold}.step.done .dot,.step.current .dot{background:var(--yellow);color:#222}.step.current .dot{box-shadow:0 0 0 4px var(--yellow-soft)}.step p{font-size:11px;color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.field label{display:block;font-size:12px;font-weight:bold;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:white}.field.full{grid-column:1/-1}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.toast{position:fixed;right:25px;bottom:25px;background:#20252b;color:white;padding:13px 16px;border-radius:9px;display:none;z-index:20}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:15;align-items:center;justify-content:center}.modal{background:white;width:min(650px,92vw);border-radius:14px;padding:24px;max-height:90vh;overflow:auto}.modal-backdrop.open{display:flex}
+.profile-box{display:flex;gap:16px;align-items:center}.profile-img{width:80px;height:80px;border-radius:50%;object-fit:cover;background:var(--yellow-soft);border:3px solid var(--yellow)}
+.prototype-banner{background:#20252b;color:#fff;padding:10px 14px;border-radius:8px;margin-bottom:18px;font-size:12px;line-height:1.45}.version-badge{display:inline-block;background:var(--yellow);color:#222;font-weight:800;padding:3px 7px;border-radius:999px;margin-left:6px}.footer-note{margin-top:28px;padding:14px 0 4px;color:#6b7280;font-size:11px;text-align:center;border-top:1px solid var(--line)}
+.notice{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:12px 14px;border-radius:5px;margin-bottom:16px;font-size:13px}
+.flow-box{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.flow-item{background:#f3f4f6;padding:10px 13px;border-radius:8px;font-weight:700;font-size:13px}.arrow{color:#888}
+@media(max-width:900px){.sidebar{width:74px}.brand span,.nav button span{display:none}.main{margin-left:74px;width:calc(100% - 74px)}.cards{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.content{padding:18px}.cards{grid-template-columns:1fr 1fr}.form-grid,.info-grid{grid-template-columns:1fr}.table{min-width:760px}.panel.table-wrap{overflow:auto}.topbar{padding:0 15px}}
+
+.action-help{font-size:12px;color:var(--muted);line-height:1.5;margin:8px 0}
+.issue-panel{background:#fffdf4;border-color:#eadb9c}
+.issue-action{background:var(--yellow);color:#222;width:100%;margin:8px 0}
+.issue-item{padding:12px;margin:10px 0;border:1px solid var(--line);background:white;border-radius:8px;overflow-wrap:anywhere}
+.issue-item b{display:block;margin-bottom:5px}
+.courier-emphasis{background:#fffdf4;padding:12px;border-radius:9px;border:1px solid #eadb9c}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">RM</div><span>Rappy Moji</span></div>
+  <div class="nav">
+    <button class="active" onclick="showPage('dashboard',this)">▦ <span>Pedidos</span></button>
+    <button onclick="showPage('new',this)">＋ <span>Nuevo domicilio</span></button>
+    <button onclick="showPage('couriers',this)">● <span>Domiciliarios</span></button>
+    <button onclick="showPage('history',this)">◷ <span>Historial</span></button>
+  </div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <strong id="pageTitle">Pedidos <span class="version-badge">v0.2</span></strong>
+  <div class="operator"><div><b>Operador</b><br><small style="color:#777">Turno actual</small></div><div class="avatar">OP</div></div>
+</header>
+
+<div class="content">
+<div class="prototype-banner"><b>Prototipo académico — Rappy Moji v0.2.</b> Esta interfaz representa una propuesta conceptual para la gestión y seguimiento de domicilios. Los datos son ficticios y las funciones son simuladas; no constituye una aplicación productiva ni una integración real con WhatsApp, pagos, geolocalización o servicios externos.</div>
+<section id="dashboard" class="page active">
+  <h1>Pedidos</h1><div class="subtitle">Controla el estado de los domicilios desde un solo lugar.</div>
+  <div class="cards" id="metrics"></div>
+  <div class="panel">
+    <div class="panel-head"><h2>Pedidos activos</h2><button class="primary yellow" onclick="showPage('new')">+ Nuevo domicilio</button></div>
+    <div class="filters"><input id="search" placeholder="Buscar cliente, teléfono o dirección..." oninput="renderOrders()">
+      <select id="statusFilter" onchange="renderOrders()"><option value="">Todos los estados</option><option>Nuevo</option><option>Confirmado</option><option>En proceso</option><option>Entregado</option><option>Abandonado</option><option>Cancelado</option></select>
+    </div>
+  </div>
+  <div class="panel table-wrap"><table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Dirección</th><th>Domiciliario</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
+</section>
+
+<section id="new" class="page">
+  <h1>Nuevo domicilio</h1><div class="subtitle">Registra la información mínima necesaria para iniciar un servicio.</div>
+  <div class="panel">
+    <div class="notice">El pedido se crea inicialmente como <b>Nuevo</b>. La asignación del domiciliario se realiza después.</div>
+    <form id="newForm" class="form-grid">
+      <div class="field"><label>Nombre del cliente *</label><input name="name" required value="Cliente de prueba"></div>
+      <div class="field"><label>Teléfono *</label><input name="phone" required value="300 555 0142"></div>
+      <div class="field full"><label>Dirección *</label><input name="address" required value="Calle 20 # 15-30"></div>
+      <div class="field full"><label>Productos *</label><textarea name="products" rows="3" required>2 hamburguesas, 1 gaseosa</textarea></div>
+      <div class="field"><label>Tipo de pago</label><select name="payment"><option>Transferencia</option><option>Efectivo</option></select></div>
+      <div class="field"><label>Valor final</label><input name="value" value="$35.000"></div>
+      <div class="field full"><button class="primary" type="submit">Crear pedido Nuevo</button></div>
+    </form>
+  </div>
+</section>
+
+<section id="detail" class="page">
+  <div class="panel-head"><div><h1 id="detailTitle">Pedido</h1><div class="subtitle" id="detailSubtitle"></div></div><button class="secondary" onclick="showPage('dashboard')">← Volver a pedidos</button></div>
+  <div class="detail-grid">
+    <div>
+      <div class="panel"><h2>Flujo del pedido</h2><div id="timeline" class="timeline"></div><div id="detailActions" class="actions"></div></div>
+      <div class="panel"><h2>Información del pedido</h2><div class="info-grid" id="detailInfo"></div></div>
+    </div>
+    <div>
+      <div class="panel"><h2>Domiciliario</h2><div id="courierCard"></div></div>
+      <div class="panel issue-panel"><h2>Novedades e inconvenientes</h2><p class="action-help">Consulta las novedades de este domicilio. Registrar una novedad no modifica automáticamente el estado.</p><div id="issueList"></div><button class="primary issue-action" onclick="openIssue()">＋ Registrar inconveniente</button><p class="action-help">Después de registrar la novedad puedes decidir si el pedido continúa o se cancela.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="couriers" class="page">
+  <h1>Domiciliarios</h1><div class="subtitle">Consulta quién está disponible y quién atiende cada servicio.</div>
+  <div class="panel" id="couriersPanel"></div>
+</section>
+
+<section id="history" class="page">
+  <h1>Historial</h1><div class="subtitle">Consulta servicios finalizados o cancelados.</div>
+  <div class="panel table-wrap"><table class="table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Valor</th><th>Acción</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+</section>
+</div>
+</main>
+</div>
+
+<div id="modalBackdrop" class="modal-backdrop"><div class="modal"><div class="panel-head"><h2 id="modalTitle">Registrar inconveniente</h2><button class="secondary" onclick="closeModal()">Cerrar</button></div><div id="modalContent"></div></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+const STORAGE='rappyMojiPrototypeV2';
+let orders = JSON.parse(localStorage.getItem(STORAGE) || 'null') || [
+ {id:'RM-001',name:'María Gómez',phone:'300 123 4567',address:'Carrera 31 # 18-42',products:'1 pollo asado, papas y gaseosa',payment:'Efectivo',value:'$42.000',status:'Nuevo',courier:null,created:'27/09/2026 10:15'},
+ {id:'RM-002',name:'Carlos Pérez',phone:'310 456 7890',address:'Calle 12 # 22-08',products:'2 pizzas medianas',payment:'Transferencia',value:'$58.000',status:'Confirmado',courier:'RM-07',courierName:'Luis',created:'27/09/2026 10:02'},
+ {id:'RM-003',name:'Ana Rodríguez',phone:'315 987 1234',address:'Carrera 40 # 9-12',products:'Mercado varios',payment:'Efectivo',value:'$75.000',status:'En proceso',courier:'RM-03',courierName:'Jhon',created:'27/09/2026 09:40'},
+ {id:'RM-004',name:'Pedro Martínez',phone:'320 222 1100',address:'Calle 8 # 30-15',products:'Medicamentos de venta libre',payment:'Transferencia',value:'$28.000',status:'Entregado',courier:'RM-02',courierName:'Daniel',created:'26/09/2026 18:20'},
+ {id:'RM-005',name:'Laura Torres',phone:'301 444 2211',address:'Carrera 18 # 11-04',products:'3 productos',payment:'Efectivo',value:'$31.000',status:'Abandonado',courier:null,created:'27/09/2026 08:50'}
+];
+const couriers=[
+ {code:'RM-02',name:'Daniel',available:false,photo:'assets/rappi.png'},
+ {code:'RM-03',name:'Jhon',available:false,photo:'assets/rappi.png'},
+ {code:'RM-07',name:'Luis',available:true,photo:'assets/rappi.png'},
+ {code:'RM-11',name:'Andrés',available:true,photo:'assets/rappi.png'}
+];
+let currentId=null;
+
+function save(){localStorage.setItem(STORAGE,JSON.stringify(orders))}
+function statusClass(s){return 'status s-'+s.toLowerCase().replaceAll(' ','-')}
+function showPage(id,btn){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+ const titles={dashboard:'Pedidos',new:'Nuevo domicilio',couriers:'Domiciliarios',history:'Historial',detail:'Detalle del pedido'};
+ document.getElementById('pageTitle').textContent=titles[id]||'Rappy Moji';
+ if(id==='dashboard')renderAll();
+ if(id==='history')renderHistory();
+ if(id==='couriers')renderCouriers();
+}
+function renderAll(){renderMetrics();renderOrders()}
+function renderMetrics(){
+ const counts=['Nuevo','Confirmado','En proceso','Entregado','Abandonado'].map(s=>orders.filter(o=>o.status===s).length);
+ const labels=['Nuevos','Confirmados','En proceso','Entregados','Abandonados'];
+ document.getElementById('metrics').innerHTML=labels.map((l,i)=>`<div class="metric"><strong>${counts[i]}</strong><span>${l}</span></div>`).join('');
+}
+function renderOrders(){
+ const q=(document.getElementById('search')?.value||'').toLowerCase();
+ const f=document.getElementById('statusFilter')?.value||'';
+ const rows=orders.filter(o=>(!f||o.status===f)&&(!q||[o.name,o.phone,o.address,o.id].join(' ').toLowerCase().includes(q)));
+ document.getElementById('ordersBody').innerHTML=rows.map(o=>`<tr>
+ <td><b>${o.id}</b><br><small style="color:#777">${o.created}</small></td><td>${o.name}</td><td>${o.address}</td>
+ <td>${o.courier?o.courier+' · '+o.courierName:'—'}</td><td><span class="${statusClass(o.status)}">${o.status}</span></td>
+ <td><button class="secondary small" onclick="openDetail('${o.id}')">Ver y gestionar</button></td></tr>`).join('') || `<tr><td colspan="6" class="empty">No hay pedidos que coincidan.</td></tr>`;
+}
+function openDetail(id){
+ currentId=id;const o=orders.find(x=>x.id===id);if(!o)return;
+ document.getElementById('detailTitle').textContent=o.id;
+ document.getElementById('detailSubtitle').textContent=o.name+' · '+o.address;
+ document.getElementById('detailInfo').innerHTML=[
+ ['Cliente',o.name],['Teléfono',o.phone],['Dirección',o.address],['Productos',o.products],
+ ['Pago',o.payment],['Valor final',o.value],['Estado',o.status],['Domiciliario',o.courier?o.courier+' · '+o.courierName:'Pendiente']
+ ].map(x=>`<div class="info"><label>${x[0]}</label><b>${x[1]}</b></div>`).join('');
+ const seq=['Nuevo','Confirmado','En proceso','Entregado']; const pos=seq.indexOf(o.status);
+ document.getElementById('timeline').innerHTML=seq.map((s,i)=>`<div class="step ${i<=pos&&pos>=0?'done':''} ${s===o.status?'current':''}"><div class="dot">${i+1}</div><p>${s}</p></div>`).join('');
+ if(o.status==='Abandonado') document.getElementById('timeline').innerHTML+=`<div style="margin-left:8px"><span class="${statusClass('Abandonado')}">Abandonado</span></div>`;
+ if(o.status==='Cancelado') document.getElementById('timeline').innerHTML+=`<div style="margin-left:8px"><span class="${statusClass('Cancelado')}">Cancelado</span></div>`;
+ renderActions(o);renderCourierCard(o);renderIssues(o);
+ showPage('detail');
+}
+function renderActions(o){
+ let html='';
+ if(o.status==='Nuevo'||o.status==='Abandonado') html+=`<button class="primary yellow" onclick="assignCourier()">Asignar domiciliario y confirmar pedido</button>`;
+ if(o.status==='Confirmado') html+=`<button class="primary" onclick="changeStatus('En proceso')">Marcar en proceso</button>`;
+ if(o.status==='En proceso') html+=`<button class="primary" onclick="changeStatus('Entregado')">Marcar como entregado</button>`;
+ if(['Nuevo','Confirmado','En proceso'].includes(o.status)) html+=`<button class="secondary danger" onclick="changeStatus('Cancelado')">Cancelar domicilio</button>`;
+ if(o.status==='Entregado'||o.status==='Cancelado') html+=`<span class="${statusClass(o.status)}">Servicio finalizado</span>`;
+ document.getElementById('detailActions').innerHTML=html+(
+ o.status==='Nuevo'||o.status==='Abandonado'?'<p class="action-help">Selecciona un domiciliario para pasar el pedido a Confirmado.</p>':
+ o.status==='Confirmado'?'<p class="action-help">Marca en proceso cuando el domiciliario comience a gestionar la compra.</p>':
+ o.status==='En proceso'?'<p class="action-help">Marca como entregado cuando el cliente reciba el domicilio.</p>':'');
+}
+function renderCourierCard(o){
+ const c=couriers.find(x=>x.code===o.courier);
+ document.getElementById('courierCard').innerHTML=c?`
+ <div class="profile-box courier-emphasis"><img class="profile-img" src="${c.photo}" alt="Imagen de perfil del domiciliario">
+ <div><b>${c.name}</b><br><span style="color:#777">${c.code}</span><br><span class="${c.available?'status s-entregado':'status s-confirmado'}">${c.available?'Disponible':'Atendiendo pedido'}</span></div></div>`
+ :`<div class="empty">Aún no hay domiciliario asignado.</div>`;
+}
+function assignCourier(){
+ const o=orders.find(x=>x.id===currentId);
+ const available=couriers.filter(c=>c.available);
+ openModal('Asignar domiciliario',`<p>Selecciona un domiciliario disponible para el pedido <b>${o.id}</b>.</p>
+ <div>${available.map(c=>`<button class="secondary" style="width:100%;margin:5px 0;text-align:left" onclick="confirmAssignment('${c.code}')"><b>${c.code}</b> · ${c.name}</button>`).join('')||'<p>No hay domiciliarios disponibles.</p>'}</div>`);
+}
+function confirmAssignment(code){
+ const o=orders.find(x=>x.id===currentId);const c=couriers.find(x=>x.code===code);
+ o.courier=code;o.courierName=c.name;o.status='Confirmado';c.available=false;save();closeModal();toast('Pedido confirmado y domiciliario asignado.');openDetail(o.id);
+}
+function changeStatus(s){
+ const o=orders.find(x=>x.id===currentId);o.status=s;save();toast('Estado actualizado a '+s+'.');openDetail(o.id);
+}
+function openIssue(){
+ const o=orders.find(x=>x.id===currentId);
+ openModal('Registrar inconveniente',`<p>Describe la novedad para consultarla dentro del pedido. Esto no cambiará automáticamente su estado.</p>
+ <div class="field"><label>Tipo</label><select id="issueType"><option>Producto no disponible</option><option>No responde el cliente</option><option>Otro inconveniente</option></select></div>
+ <div class="field" style="margin-top:12px"><label>Descripción</label><textarea id="issueText" rows="4" placeholder="Describe brevemente la situación..."></textarea></div>
+ <div style="margin-top:15px;display:flex;gap:8px"><button class="primary" onclick="saveIssue()">Guardar novedad</button><button class="secondary danger" onclick="changeStatus('Cancelado');closeModal()">Cancelar domicilio</button></div>`);
+}
+function saveIssue(){
+ const o=orders.find(x=>x.id===currentId);
+ const type=document.getElementById('issueType').value;
+ const description=document.getElementById('issueText').value.trim();
+ if(!description){alert('Escribe una descripción del inconveniente.');return;}
+ if(!Array.isArray(o.issues))o.issues=[];
+ o.issues.push({type,description,created:new Date().toLocaleString('es-CO')});
+ save();closeModal();toast('Novedad registrada para '+currentId+'.');openDetail(currentId);
+}
+function escapeHTML(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function renderIssues(o){
+ const issues=Array.isArray(o.issues)?o.issues:[];
+ document.getElementById('issueList').innerHTML=issues.length?
+ issues.map(i=>`<div class="issue-item"><b>${escapeHTML(i.type)}</b><small>${escapeHTML(i.created)}</small><p>${escapeHTML(i.description)}</p></div>`).join(''):
+ '<p class="action-help">No hay novedades registradas para este pedido.</p>';
+}
+function renderCouriers(){
+ document.getElementById('couriersPanel').innerHTML=couriers.map(c=>`<div class="profile-box" style="padding:14px 0;border-bottom:1px solid var(--line)">
+ <img class="profile-img" src="${c.photo}" alt="Imagen de perfil del domiciliario"><div style="flex:1"><b>${c.name}</b><br><span style="color:#777">${c.code}</span></div>
+ <span class="${statusClass(c.available?'Entregado':'Confirmado')}">${c.available?'Disponible':'Atendiendo'}</span></div>`).join('');
+}
+function renderHistory(){
+ const rows=orders.filter(o=>['Entregado','Cancelado'].includes(o.status));
+ document.getElementById('historyBody').innerHTML=rows.map(o=>`<tr><td>${o.id}</td><td>${o.name}</td><td>${o.created}</td><td><span class="${statusClass(o.status)}">${o.status}</span></td><td>${o.value}</td><td><button class="secondary small" onclick="openDetail('${o.id}')">Ver</button></td></tr>`).join('');
+}
+function openModal(title,content){document.getElementById('modalTitle').textContent=title;document.getElementById('modalContent').innerHTML=content;document.getElementById('modalBackdrop').classList.add('open')}
+function closeModal(){document.getElementById('modalBackdrop').classList.remove('open')}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2500)}
+document.getElementById('newForm').addEventListener('submit',e=>{
+ e.preventDefault();const d=new FormData(e.target);const id='RM-'+String(orders.length+1).padStart(3,'0');
+ orders.unshift({id,name:d.get('name'),phone:d.get('phone'),address:d.get('address'),products:d.get('products'),payment:d.get('payment'),value:d.get('value'),status:'Nuevo',courier:null,created:new Date().toLocaleString('es-CO')});
+ save();e.target.reset();toast('Nuevo domicilio creado.');openDetail(id);
+});
+renderAll();
+</script>
+</body>
+</html>
